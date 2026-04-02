@@ -5,7 +5,7 @@ import { Observable, lastValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface RegisterRequest {
-  name: string;
+  id: string;
   imageData: Buffer;
 }
 
@@ -20,7 +20,7 @@ export interface RecognizeRequest {
 
 export interface RecognizeResponse {
   recognized: boolean;
-  name: string;
+  id: string;
   confidence: number;
   message: string;
 }
@@ -52,23 +52,30 @@ export class FaceRecognitionService implements OnModuleInit {
     );
   }
 
-  async register(name: string, imageBuffer: Buffer) {
-    // 1. Call Python gRPC API
+  async register(employeeId: string, imageBuffer: Buffer) {
+    // 1. Call Python gRPC API using employeeId as the unique ID (UUID)
     const response = await lastValueFrom(
-      this.grpcService.registerFace({ name, imageData: imageBuffer }),
+      this.grpcService.registerFace({
+        id: employeeId,
+        imageData: imageBuffer,
+      }),
     );
 
     if (!response) {
       return { success: false, message: 'No response from gRPC service' };
     }
 
-    // 2. If success, save to database
+    // 2. If success, ensure employee exists or update it (optional update)
     if (response.success) {
-      await this.prisma.employee.upsert({
-        where: { name },
-        update: { updatedAt: new Date() },
-        create: { name, role: 'Employee' },
+      const exists = await this.prisma.employee.findUnique({
+        where: { id: employeeId },
       });
+      if (exists) {
+        await this.prisma.employee.update({
+          where: { id: employeeId },
+          data: { updatedAt: new Date() },
+        });
+      }
     }
 
     return response;
@@ -89,22 +96,33 @@ export class FaceRecognitionService implements OnModuleInit {
       };
     }
 
-    // 2. If recognized, log attendance
-    if (response.recognized) {
+    // 2. If recognized, resolve name from database using the UUID returned
+    if (response.recognized && response.id !== 'Unknown') {
+      const employeeId = response.id;
       const employee = await this.prisma.employee.findUnique({
-        where: { name: response.name },
+        where: { id: employeeId },
       });
 
       if (employee) {
+        // Log attendance
         await this.prisma.attendance.create({
           data: {
             employeeId: employee.id,
             status: 'present',
           },
         });
+
+        // Return original response but with the real name from DB
+        return {
+          ...response,
+          name: employee.name, // Inject name from DB
+        };
       }
     }
 
-    return response;
+    return {
+      ...response,
+      name: 'Unknown',
+    };
   }
 }

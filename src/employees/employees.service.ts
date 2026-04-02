@@ -9,7 +9,7 @@ export class EmployeesService {
     return this.prisma.employee.findMany();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.prisma.employee.findUnique({
       where: { id },
     });
@@ -21,14 +21,14 @@ export class EmployeesService {
     });
   }
 
-  async update(id: number, data: { name?: string; role?: string; email?: string }) {
+  async update(id: string, data: { name?: string; role?: string; email?: string }) {
     return this.prisma.employee.update({
       where: { id },
       data,
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return this.prisma.employee.delete({
       where: { id },
     });

@@ -14,8 +14,11 @@ export class FaceRecognitionController {
 
   @Post('register')
   @UseInterceptors(FileInterceptor('file'))
-  async register(@Body('name') name: string, @UploadedFile() file: any) {
-    const result = await this.faceService.register(name, file.buffer);
+  async register(@Body('employeeId') employeeId: string, @UploadedFile() file: any) {
+    if (!employeeId) {
+      return { status: 'failed', message: 'ID karyawan tidak boleh kosong.' };
+    }
+    const result = await this.faceService.register(employeeId, file.buffer);
     return {
       status: result.success ? 'success' : 'failed',
       message: result.message,

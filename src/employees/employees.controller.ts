@@ -12,7 +12,7 @@ export class EmployeesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.employeesService.findOne(+id);
+    return this.employeesService.findOne(id);
   }
 
   @Post()
@@ -22,11 +22,11 @@ export class EmployeesController {
 
   @Put(':id')
   update(@Param('id') id: string, @Body() data: { name?: string; role?: string; email?: string }) {
-    return this.employeesService.update(+id, data);
+    return this.employeesService.update(id, data);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.employeesService.remove(+id);
+    return this.employeesService.remove(id);
   }
 }
