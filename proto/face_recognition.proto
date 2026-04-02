@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package face_recognition;
+
+service FaceRecognitionService {
+  rpc RegisterFace (RegisterRequest) returns (RegisterResponse);
+  rpc RecognizeFace (RecognizeRequest) returns (RecognizeResponse);
+}
+
+message RegisterRequest {
+  string name = 1;
+  bytes image_data = 2;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RecognizeRequest {
+  bytes image_data = 2;
+}
+
+message RecognizeResponse {
+  bool recognized = 1;
+  string name = 2;
+  double confidence = 3;
+  string message = 4;
+}
