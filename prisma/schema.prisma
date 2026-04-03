@@ -7,38 +7,185 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// --- ENUMS (Simulated via String for SQLite, but structured for future conversion) ---
+// Note: SQLite doesn't support native Enums, so we use String + comments
+
+// --- AUTH & USER ---
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
   password  String
-  name      String
   email     String   @unique
-  role      String?
+  role      String   @default("EMPLOYEE") // ADMIN, HR, MANAGER, EMPLOYEE
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Link to Employee Profile
-  employeeId String?   @unique
+  // Relationship to Employee Profile
   employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?   @unique
 }
 
+// --- CORE HR ---
 model Employee {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  role      String?
-  email     String?   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String    @id @default(uuid())
+  employeeNumber  String?   @unique
+  name           String
+  gender         String?   // MALE, FEMALE, OTHER
+  dateOfBirth    DateTime?
+  phoneNumber    String?
+  address        String?
+  avatarUrl      String?
+  designation    String?
+  salary         Float?
+  joinDate       DateTime?
+  status         String?   @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  study           String?
+  experience      String?
+  achievement     String?
+  marks10         String?
+  marks12         String?
+  graduationMarks String?
+  documents       String?   // JSON or URL path to PDF
 
-  // Relasi balik ke User
-  user       User?
-  attendance Attendance[]
+  // Relationships
+  department     Department? @relation(fields: [departmentId], references: [id])
+  departmentId   String?
+  position       Position?   @relation(fields: [positionId], references: [id])
+  positionId     String?
+  
+  // Inverse relationships
+  user           User?
+  attendance     Attendance[]
+  timeOffs       TimeOff[]
+  tasks          Task[]
+  payrolls       Payroll[]
+  notifications  Notification[]
+  faceMetadata   FaceMetadata?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
+model Department {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  employees   Employee[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Position {
+  id          String     @id @default(uuid())
+  title       String     @unique
+  description String?
+  employees   Employee[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// --- ATTENDANCE ---
 model Attendance {
-  id         String   @id @default(uuid())
-  employeeId String
-  timestamp  DateTime @default(now())
-  status     String   // e.g. "present"
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  
+  clockIn     DateTime @default(now())
+  clockOut    DateTime?
+  
+  date        DateTime @default(now()) // For indexing daily attendance
+  status      String   @default("PRESENT") // PRESENT, LATE, ABSENT, ON_LEAVE
+  location    String?  // GPS Coordinates or Office Name
+  deviceInfo  String?  // Device ID used for clocking
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, date]) // One attendance record per employee per day
+}
+
+// --- TIME OFF / LEAVE ---
+model TimeOff {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  
+  title       String   // e.g. "Sickness Leave"
+  description String?
+  fromdate    DateTime
+  todate      DateTime
+  
+  type        String   @default("ANNUAL") // SICK, ANNUAL, UNPAID
+  status      String   @default("SUBMITTED") // SUBMITTED, ACCEPTED, REJECTED, PENDING
+  
+  approvedBy  String?  // ID of HR/Manager who approved
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// --- TASKS ---
+model Task {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  
+  title       String
+  description String?
+  date        DateTime @default(now())
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETE
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// --- PAYROLL ---
+model Payroll {
+  id             String   @id @default(uuid())
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  
+  month          Int
+  year           Int
+  basicSalary    Float
+  bonuses        Float    @default(0)
+  deductions     Float    @default(0)
+  netSalary      Float
+  
+  status         String   @default("PENDING") // PENDING, PAID
+  paymentDate    DateTime?
+  payslipUrl     String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+}
+
+// --- NOTIFICATIONS ---
+model Notification {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  
+  title       String
+  message     String
+  type        String   @default("INFO") // INFO, WARNING, SUCCESS
+  isRead      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+}
+
+// --- BIOMETRIC / FACE RECOGNITION ---
+model FaceMetadata {
+  id              String   @id @default(uuid())
+  employeeId      String   @unique
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  
+  faceEncoding    String   // JSON string or base64 of the vector/embedding
+  lastUpdated     DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

@@ -5,6 +5,26 @@ package face_recognition;
 service FaceRecognitionService {
   rpc RegisterFace (RegisterRequest) returns (RegisterResponse);
   rpc RecognizeFace (RecognizeRequest) returns (RecognizeResponse);
+  rpc DeleteFace (DeleteRequest) returns (DeleteResponse);
+  rpc GetFaceStatus (StatusRequest) returns (StatusResponse);
+}
+
+message DeleteRequest {
+  string id = 1;
+}
+
+message DeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  bool registered = 1;
+  string message = 2;
 }
 
 message RegisterRequest {

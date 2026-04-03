@@ -8,6 +8,14 @@ export class AuthService {
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { username },
+      include: { 
+        employee: {
+          include: {
+            department: true,
+            position: true
+          }
+        }
+      },
     });
     if (user && user.password === pass) {
       const { password, ...result } = user;

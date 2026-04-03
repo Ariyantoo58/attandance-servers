@@ -28,6 +28,8 @@ export interface RecognizeResponse {
 interface FaceRecognitionGrpcService {
   registerFace(data: RegisterRequest): Observable<RegisterResponse>;
   recognizeFace(data: RecognizeRequest): Observable<RecognizeResponse>;
+  deleteFace(data: { id: string }): Observable<{ success: boolean; message: string }>;
+  getFaceStatus(data: { id: string }): Observable<{ registered: boolean; message: string }>;
 }
 
 @Injectable()
@@ -36,7 +38,7 @@ export class FaceRecognitionService implements OnModuleInit {
     transport: ms.Transport.GRPC,
     options: {
       package: 'face_recognition',
-      protoPath: join(__dirname, '../../proto/face_recognition.proto'),
+      protoPath: join(process.cwd(), 'proto/face_recognition.proto'),
       url: 'localhost:50051',
     },
   })
@@ -124,5 +126,30 @@ export class FaceRecognitionService implements OnModuleInit {
       ...response,
       name: 'Unknown',
     };
+  }
+  
+  async checkStatus(employeeId: string) {
+    console.log(`[FaceRecognitionService] Checking status for: ${employeeId}`);
+    try {
+      const response = await lastValueFrom(
+        this.grpcService.getFaceStatus({ id: employeeId }),
+      );
+      console.log(`[FaceRecognitionService] Status result:`, response);
+      return response;
+    } catch (e) {
+      console.error(`[FaceRecognitionService] Error:`, e);
+      return { registered: false, message: 'gRPC error' };
+    }
+  }
+
+  async delete(employeeId: string) {
+    try {
+      const response = await lastValueFrom(
+        this.grpcService.deleteFace({ id: employeeId }),
+      );
+      return response;
+    } catch (e) {
+      return { success: false, message: 'gRPC error' };
+    }
   }
 }

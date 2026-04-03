@@ -4,6 +4,9 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
+  Get,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FaceRecognitionService } from './face-recognition.service';
@@ -35,5 +38,15 @@ export class FaceRecognitionController {
       similarity: `${result.confidence}%`,
       message: result.message,
     };
+  }
+
+  @Get('status/:id')
+  async getStatus(@Param('id') id: string) {
+    return this.faceService.checkStatus(id);
+  }
+
+  @Delete('reset/:id')
+  async reset(@Param('id') id: string) {
+    return this.faceService.delete(id);
   }
 }

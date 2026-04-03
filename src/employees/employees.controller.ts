@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 
 @Controller('employees')
@@ -10,18 +10,28 @@ export class EmployeesController {
     return this.employeesService.findAll();
   }
 
+  @Get('departments')
+  findAllDepartments() {
+    return this.employeesService.findAllDepartments();
+  }
+
+  @Get('positions')
+  findAllPositions() {
+    return this.employeesService.findAllPositions();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(id);
   }
 
   @Post()
-  create(@Body() data: { name: string; role?: string; email?: string }) {
+  create(@Body() data: any) {
     return this.employeesService.create(data);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() data: { name?: string; role?: string; email?: string }) {
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
     return this.employeesService.update(id, data);
   }
 
