@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AttendanceService {
   constructor(private prisma: PrismaService) {}
 
-  async clockIn(employeeId: string, location?: string, deviceInfo?: string) {
+  async clockIn(employeeId: string, location?: string, deviceInfo?: string, latitude?: number, longitude?: number) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -28,14 +28,16 @@ export class AttendanceService {
         employeeId,
         date: today,
         clockIn: new Date(),
-        location,
+        clockInLocation: location,
+        clockInLat: latitude,
+        clockInLng: longitude,
         deviceInfo,
         status: 'PRESENT',
       },
     });
   }
 
-  async clockOut(employeeId: string) {
+  async clockOut(employeeId: string, latitude?: number, longitude?: number, location?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -60,6 +62,9 @@ export class AttendanceService {
       where: { id: attendance.id },
       data: {
         clockOut: new Date(),
+        clockOutLat: latitude, 
+        clockOutLng: longitude,
+        clockOutLocation: location,
       },
     });
   }

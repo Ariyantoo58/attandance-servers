@@ -152,7 +152,9 @@ async function main() {
       clockIn: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000), // 08:00 AM
       clockOut: new Date(yesterday.getTime() + 17 * 60 * 60 * 1000), // 17:00 PM
       status: 'PRESENT',
-      location: 'Office - 1st Floor',
+      clockInLocation: 'Office - 1st Floor',
+      clockInLat: -6.200000,
+      clockInLng: 106.816666,
     }
   });
 

@@ -40,7 +40,7 @@ export class FaceRecognitionService implements OnModuleInit {
     options: {
       package: 'face_recognition',
       protoPath: join(process.cwd(), 'proto/face_recognition.proto'),
-      url: 'localhost:50051',
+      url: '127.0.0.1:50051',
     },
   })
   private client: ms.ClientGrpc;
@@ -112,7 +112,7 @@ export class FaceRecognitionService implements OnModuleInit {
     return response;
   }
 
-  async recognize(imageBuffer: Buffer, expectedEmployeeId?: string) {
+  async recognize(imageBuffer: Buffer, expectedEmployeeId?: string, latitude?: number, longitude?: number) {
     // 1. Call Python gRPC API
     const response = await lastValueFrom(
       this.grpcService.recognizeFace({ imageData: imageBuffer }),
@@ -160,14 +160,16 @@ export class FaceRecognitionService implements OnModuleInit {
         });
 
         if (!existingAttendance) {
-          await this.attendanceService.clockIn(employee.id, 'Office (Face Scan)', 'Mobile Device');
+          const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
+          await this.attendanceService.clockIn(employee.id, locName, 'Mobile Device', latitude, longitude);
           return {
             ...response,
             name: employee.name,
             message: 'Clock In Berhasil',
           };
         } else if (!existingAttendance.clockOut) {
-          await this.attendanceService.clockOut(employee.id);
+          const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
+          await this.attendanceService.clockOut(employee.id, latitude, longitude, locName);
           return {
             ...response,
             name: employee.name,

@@ -98,7 +98,17 @@ model Attendance {
   
   date        DateTime @default(now()) // For indexing daily attendance
   status      String   @default("PRESENT") // PRESENT, LATE, ABSENT, ON_LEAVE
-  location    String?  // GPS Coordinates or Office Name
+  
+  // Clock In Details
+  clockInLocation String?
+  clockInLat      Float?
+  clockInLng      Float?
+  
+  // Clock Out Details
+  clockOutLocation String?
+  clockOutLat       Float?
+  clockOutLng       Float?
+  
   deviceInfo  String?  // Device ID used for clocking
   
   createdAt   DateTime @default(now())

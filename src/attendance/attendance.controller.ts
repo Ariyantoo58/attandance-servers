@@ -26,9 +26,9 @@ export class AttendanceController {
   })
   @ApiResponse({ status: 201, description: 'The attendance record has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Already clocked in for today or missing ID.' })
-  async clockIn(@Body() body: { employeeId: string; location?: string; deviceInfo?: string }) {
+  async clockIn(@Body() body: { employeeId: string; location?: string; deviceInfo?: string; latitude?: number; longitude?: number }) {
     if (!body.employeeId) throw new BadRequestException('Employee ID is required');
-    return this.attendanceService.clockIn(body.employeeId, body.location, body.deviceInfo);
+    return this.attendanceService.clockIn(body.employeeId, body.location, body.deviceInfo, body.latitude, body.longitude);
   }
 
   @Post('clock-out')
@@ -44,9 +44,9 @@ export class AttendanceController {
   })
   @ApiResponse({ status: 200, description: 'The attendance record has been successfully updated with clock-out time.' })
   @ApiResponse({ status: 400, description: 'Not clocked in for today or already clocked out.' })
-  async clockOut(@Body() body: { employeeId: string }) {
+  async clockOut(@Body() body: { employeeId: string; latitude?: number; longitude?: number; location?: string }) {
     if (!body.employeeId) throw new BadRequestException('Employee ID is required');
-    return this.attendanceService.clockOut(body.employeeId);
+    return this.attendanceService.clockOut(body.employeeId, body.latitude, body.longitude, body.location);
   }
 
   @Get('history/:employeeId')

@@ -30,14 +30,34 @@ export class FaceRecognitionController {
 
   @Post('recognize')
   @UseInterceptors(FileInterceptor('file'))
-  async recognize(@Body('employeeId') employeeId: string, @UploadedFile() file: any) {
-    const result = await this.faceService.recognize(file.buffer, employeeId);
-    return {
-      recognized: result.recognized,
-      name: result.name,
-      similarity: `${result.confidence}%`,
-      message: result.message,
-    };
+  async recognize(
+    @Body('employeeId') employeeId: string,
+    @Body('latitude') latitude: string,
+    @Body('longitude') longitude: string,
+    @UploadedFile() file: any,
+  ) {
+    if (!file) {
+      console.error('[FaceRecognitionController] No file uploaded');
+      return { recognized: false, message: 'Foto tidak terdeteksi.' };
+    }
+    
+    try {
+      const lat = latitude ? parseFloat(latitude) : undefined;
+      const lng = longitude ? parseFloat(longitude) : undefined;
+      
+      console.log(`[FaceRecognitionController] Processing recognize for employee: ${employeeId} at ${lat}, ${lng}`);
+      const result = await this.faceService.recognize(file.buffer, employeeId, lat, lng);
+      
+      return {
+        recognized: result.recognized,
+        name: result.name,
+        similarity: `${result.confidence}%`,
+        message: result.message,
+      };
+    } catch (error) {
+      console.error('[FaceRecognitionController] Error during recognize:', error);
+      return { recognized: false, message: 'Gagal memproses data wajah (Server Error).' };
+    }
   }
 
   @Get('status/:id')
