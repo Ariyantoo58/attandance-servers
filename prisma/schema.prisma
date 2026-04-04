@@ -17,8 +17,11 @@ model User {
   password  String
   email     String   @unique
   role      String   @default("EMPLOYEE") // ADMIN, HR, MANAGER, EMPLOYEE
+  refreshToken String?
+  refreshTokenExp DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
 
   // Relationship to Employee Profile
   employee   Employee? @relation(fields: [employeeId], references: [id])
