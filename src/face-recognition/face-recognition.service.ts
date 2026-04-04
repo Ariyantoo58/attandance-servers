@@ -59,6 +59,31 @@ export class FaceRecognitionService implements OnModuleInit {
   }
 
   async register(employeeId: string, imageBuffer: Buffer) {
+    // 0. Check if this face already belongs to someone else
+    try {
+      const recognizeResponse = await lastValueFrom(
+        this.grpcService.recognizeFace({ imageData: imageBuffer }),
+      ).catch(() => null);
+
+      if (recognizeResponse && recognizeResponse.recognized) {
+        // If recognized and NOT the same employee
+        if (recognizeResponse.id !== employeeId) {
+          const existingEmployee = await this.prisma.employee.findUnique({
+            where: { id: recognizeResponse.id },
+          });
+          const name = existingEmployee ? existingEmployee.name : 'karyawan lain';
+          return {
+            success: false,
+            message: `Wajah ini sudah terdaftar atas nama ${name}. Satu wajah hanya dapat digunakan untuk satu data karyawan.`,
+          };
+        }
+      }
+    } catch (error) {
+      console.error('[FaceRecognitionService] Error checking existing face:', error);
+      // Continue registration if recognition service fails? 
+      // Probably safer to continue if it's just a check, but ideally we'd want it to work.
+    }
+
     // 1. Call Python gRPC API using employeeId as the unique ID (UUID)
     const response = await lastValueFrom(
       this.grpcService.registerFace({
