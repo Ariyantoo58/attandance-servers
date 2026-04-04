@@ -22,6 +22,7 @@ export class EmployeesService {
   async findOne(id: string) {
     return this.prisma.employee.findUnique({
       where: { id },
+      include: { department: true, position: true }
     });
   }
 

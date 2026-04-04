@@ -3,6 +3,7 @@ import * as ms from '@nestjs/microservices';
 import { join } from 'path';
 import { Observable, lastValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { AttendanceService } from '../attendance/attendance.service';
 
 export interface RegisterRequest {
   id: string;
@@ -46,7 +47,10 @@ export class FaceRecognitionService implements OnModuleInit {
 
   private grpcService: FaceRecognitionGrpcService;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private attendanceService: AttendanceService,
+  ) {}
 
   onModuleInit() {
     this.grpcService = this.client.getService<FaceRecognitionGrpcService>(
@@ -83,12 +87,12 @@ export class FaceRecognitionService implements OnModuleInit {
     return response;
   }
 
-  async recognize(imageBuffer: Buffer) {
+  async recognize(imageBuffer: Buffer, expectedEmployeeId?: string) {
     // 1. Call Python gRPC API
     const response = await lastValueFrom(
       this.grpcService.recognizeFace({ imageData: imageBuffer }),
     );
-
+  
     if (!response) {
       return {
         recognized: false,
@@ -97,34 +101,69 @@ export class FaceRecognitionService implements OnModuleInit {
         confidence: 0,
       };
     }
-
-    // 2. If recognized, resolve name from database using the UUID returned
+  
+    // 2. Resolve name from database using the UUID returned
     if (response.recognized && response.id !== 'Unknown') {
-      const employeeId = response.id;
+      const recognizedId = response.id;
+      
+      // Verification: If expectedEmployeeId is provided, it MUST match
+      if (expectedEmployeeId && recognizedId !== expectedEmployeeId) {
+        return {
+          recognized: false,
+          message: 'Face does not match the logged-in user',
+          name: 'Unknown',
+          confidence: response.confidence
+        };
+      }
+  
       const employee = await this.prisma.employee.findUnique({
-        where: { id: employeeId },
+        where: { id: recognizedId },
       });
-
+  
       if (employee) {
-        // Log attendance
-        await this.prisma.attendance.create({
-          data: {
-            employeeId: employee.id,
-            status: 'present',
+        // Attendance Logic: Clock In -> Clock Out -> No more
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const existingAttendance = await this.prisma.attendance.findUnique({
+          where: {
+            employeeId_date: {
+              employeeId: employee.id,
+              date: today,
+            },
           },
         });
 
-        // Return original response but with the real name from DB
-        return {
-          ...response,
-          name: employee.name, // Inject name from DB
-        };
+        if (!existingAttendance) {
+          await this.attendanceService.clockIn(employee.id, 'Office (Face Scan)', 'Mobile Device');
+          return {
+            ...response,
+            name: employee.name,
+            message: 'Clock In Berhasil',
+          };
+        } else if (!existingAttendance.clockOut) {
+          await this.attendanceService.clockOut(employee.id);
+          return {
+            ...response,
+            name: employee.name,
+            message: 'Clock Out Berhasil',
+          };
+        } else {
+          return {
+            recognized: false,
+            id: employee.id,
+            name: employee.name,
+            confidence: response.confidence,
+            message: 'Anda sudah melakukan Clock In & Clock Out hari ini.',
+          };
+        }
       }
     }
-
+  
     return {
       ...response,
       name: 'Unknown',
+      message: response.recognized ? 'Recognized but employee not found in database' : response.message
     };
   }
   

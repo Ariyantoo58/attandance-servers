@@ -30,8 +30,8 @@ export class FaceRecognitionController {
 
   @Post('recognize')
   @UseInterceptors(FileInterceptor('file'))
-  async recognize(@UploadedFile() file: any) {
-    const result = await this.faceService.recognize(file.buffer);
+  async recognize(@Body('employeeId') employeeId: string, @UploadedFile() file: any) {
+    const result = await this.faceService.recognize(file.buffer, employeeId);
     return {
       recognized: result.recognized,
       name: result.name,
