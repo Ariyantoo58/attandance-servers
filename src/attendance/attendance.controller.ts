@@ -18,9 +18,14 @@ export class AttendanceController {
   }
 
   @Get('history/:employeeId')
-  async getHistory(@Param('employeeId') employeeId: string) {
-    return this.attendanceService.getAttendanceHistory(employeeId);
+  async getHistory(
+    @Param('employeeId') employeeId: string,
+    @Query('skip') skip?: number,
+    @Query('take') take?: number,
+  ) {
+    return this.attendanceService.getAttendanceHistory(employeeId, skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
+
 
   @Get('daily')
   async getDaily(@Query('date') dateString: string) {

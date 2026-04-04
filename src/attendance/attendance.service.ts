@@ -64,12 +64,15 @@ export class AttendanceService {
     });
   }
 
-  async getAttendanceHistory(employeeId: string) {
+  async getAttendanceHistory(employeeId: string, skip?: number, take?: number) {
     return this.prisma.attendance.findMany({
       where: { employeeId },
       orderBy: { date: 'desc' },
+      skip: skip || 0,
+      take: take || undefined,
     });
   }
+
 
   async getDailyAttendance(date: Date) {
      const startOfDay = new Date(date);
