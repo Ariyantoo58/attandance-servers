@@ -71,10 +71,44 @@ export class EmployeesService {
   }
 
   async remove(id: string) {
-    const employee = await this.prisma.employee.delete({
-      where: { id },
-    });
-    this.notificationService.broadcast('employee_changed', { action: 'DELETED', employeeId: id });
-    return employee;
+    try {
+      // Use transaction to ensure all related data is deleted
+      return await this.prisma.$transaction(async (prisma) => {
+        // 1. Delete Attendance Corrections
+        await prisma.attendanceCorrection.deleteMany({ where: { employeeId: id } });
+
+        // 2. Delete Payrolls
+        await prisma.payroll.deleteMany({ where: { employeeId: id } });
+
+        // 3. Delete Notifications
+        await prisma.notification.deleteMany({ where: { employeeId: id } });
+
+        // 4. Delete Tasks
+        await prisma.task.deleteMany({ where: { employeeId: id } });
+
+        // 5. Delete TimeOffs
+        await prisma.timeOff.deleteMany({ where: { employeeId: id } });
+
+        // 6. Delete FaceMetadata
+        await prisma.faceMetadata.deleteMany({ where: { employeeId: id } });
+
+        // 7. Delete Attendance Records
+        await prisma.attendance.deleteMany({ where: { employeeId: id } });
+
+        // 8. Delete User account linked to employee
+        await prisma.user.deleteMany({ where: { employeeId: id } });
+
+        // 9. Finally delete the Employee
+        const employee = await prisma.employee.delete({
+          where: { id },
+        });
+
+        this.notificationService.broadcast('employee_changed', { action: 'DELETED', employeeId: id });
+        return employee;
+      });
+    } catch (error) {
+      console.error('Prisma Employee Delete Error:', error);
+      throw error;
+    }
   }
 }
