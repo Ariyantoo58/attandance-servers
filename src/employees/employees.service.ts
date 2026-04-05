@@ -49,6 +49,14 @@ export class EmployeesService {
         };
       }
 
+      // Cast numeric marks to strings to match Prisma schema
+      const fieldsToCast = ['marks10', 'marks12', 'graduationMarks'];
+      fieldsToCast.forEach(field => {
+        if (createPayload[field] !== undefined && createPayload[field] !== null) {
+          createPayload[field] = String(createPayload[field]);
+        }
+      });
+
       const employee = await this.prisma.employee.create({
         data: createPayload,
       });
@@ -62,6 +70,14 @@ export class EmployeesService {
   }
 
   async update(id: string, data: any) {
+    // Cast numeric marks to strings to match Prisma schema
+    const fieldsToCast = ['marks10', 'marks12', 'graduationMarks'];
+    fieldsToCast.forEach(field => {
+      if (data[field] !== undefined && data[field] !== null) {
+        data[field] = String(data[field]);
+      }
+    });
+
     const employee = await this.prisma.employee.update({
       where: { id },
       data,
