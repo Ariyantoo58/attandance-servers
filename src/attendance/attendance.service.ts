@@ -78,6 +78,22 @@ export class AttendanceService {
     });
   }
 
+  async getAttendanceByMonth(employeeId: string, month: number, year: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    return this.prisma.attendance.findMany({
+      where: {
+        employeeId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+  }
+
 
   async getDailyAttendance(date: Date) {
      const startOfDay = new Date(date);

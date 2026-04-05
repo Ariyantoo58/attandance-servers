@@ -63,6 +63,19 @@ export class AttendanceController {
     return this.attendanceService.getAttendanceHistory(employeeId, skip ? Number(skip) : undefined, take ? Number(take) : undefined);
   }
 
+  @Get('monthly/:employeeId')
+  @ApiOperation({ summary: 'Get monthly attendance for late deduction calculation' })
+  @ApiParam({ name: 'employeeId', type: 'string' })
+  @ApiQuery({ name: 'month', type: 'number' })
+  @ApiQuery({ name: 'year', type: 'number' })
+  async getMonthly(
+    @Param('employeeId') employeeId: string,
+    @Query('month') month: number,
+    @Query('year') year: number,
+  ) {
+    return this.attendanceService.getAttendanceByMonth(employeeId, Number(month), Number(year));
+  }
+
   @Get('daily')
   @ApiOperation({ summary: 'Get daily attendance for all employees' })
   @ApiQuery({ name: 'date', type: 'string', required: false, description: 'Date string (YYYY-MM-DD)' })

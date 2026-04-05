@@ -41,6 +41,7 @@ model Employee {
   marks12         String?
   graduationMarks String?
   documents       String?
+  ptkpStatus      String?        @default("TK0")
   departmentId    String?
   positionId      String?
   createdAt       DateTime       @default(now())
@@ -130,20 +131,25 @@ model Task {
 }
 
 model Payroll {
-  id          String    @id @default(uuid())
-  employeeId  String
-  month       Int
-  year        Int
-  basicSalary Float
-  bonuses     Float     @default(0)
-  deductions  Float     @default(0)
-  netSalary   Float
-  status      String    @default("PENDING")
-  paymentDate DateTime?
-  payslipUrl  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  employee    Employee  @relation(fields: [employeeId], references: [id])
+  id                  String    @id @default(uuid())
+  employeeId          String
+  month               Int
+  year                Int
+  basicSalary         Float
+  overtime            Float     @default(0)
+  bonuses             Float     @default(0)
+  pph21               Float     @default(0)
+  bpjsKetenagakerjaan Float     @default(0)
+  bpjsKesehatan       Float     @default(0)
+  lateDeduction       Float     @default(0)
+  otherDeductions     Float     @default(0)
+  netSalary           Float
+  status              String    @default("PENDING")
+  paymentDate         DateTime?
+  payslipUrl          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  employee            Employee  @relation(fields: [employeeId], references: [id])
 
   @@unique([employeeId, month, year])
 }

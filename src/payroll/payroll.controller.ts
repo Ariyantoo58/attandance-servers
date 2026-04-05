@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
 import { PayrollService } from './payroll.service';
 
 @Controller('payroll')
@@ -11,10 +11,20 @@ export class PayrollController {
     month: number;
     year: number;
     basicSalary: number;
+    overtime?: number;
     bonuses?: number;
-    deductions?: number;
+    pph21?: number;
+    bpjsKetenagakerjaan?: number;
+    bpjsKesehatan?: number;
+    lateDeduction?: number;
+    otherDeductions?: number;
   }) {
     return this.payrollService.createPayroll(body);
+  }
+
+  @Get('monthly')
+  async getMonthlyPayrolls(@Query('month') month: string, @Query('year') year: string) {
+    return this.payrollService.getMonthlyPayrolls(Number(month), Number(year));
   }
 
   @Get('employee/:employeeId')
