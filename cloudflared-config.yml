@@ -1,0 +1,7 @@
+tunnel: f511814a-509b-4fb5-bb7e-eff4d73e1345
+credentials-file: /Users/admin/.cloudflared/f511814a-509b-4fb5-bb7e-eff4d73e1345.json
+
+ingress:
+  - hostname: api.digitaland.cloud
+    service: http://localhost:3000
+  - service: http_status:404

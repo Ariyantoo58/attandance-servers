@@ -26,4 +26,33 @@ export class NotificationController {
     const userId = req.user.userId || req.user.sub;
     return this.notificationService.updatePushToken(userId, token);
   }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('test-push')
+  @ApiOperation({ summary: 'Send a test push notification to yourself' })
+  async testPush(@Request() req: any) {
+    const userId = req.user.userId || req.user.sub;
+    await this.notificationService.notifyUser(
+      userId,
+      'Test Push Notification',
+      'Halo! Ini adalah pesan percobaan push notification.',
+      { screen: 'Home', timestamp: new Date().toISOString() }
+    );
+    return { success: true, message: 'Test notification sent' };
+  }
+  
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Get('test-push/:userId')
+  @ApiOperation({ summary: 'Send a test push notification to a specific user by ID' })
+  async testPushToUser(@Param('userId') userId: string) {
+    await this.notificationService.notifyUser(
+      userId,
+      'Test Push Notification',
+      'Halo! Ini adalah pesan percobaan push notification dari Admin.',
+      { screen: 'Home', timestamp: new Date().toISOString() }
+    );
+    return { success: true, message: `Test notification sent to user ${userId}` };
+  }
 }
