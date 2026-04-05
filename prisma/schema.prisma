@@ -54,6 +54,7 @@ model Employee {
   tasks           Task[]
   timeOffs        TimeOff[]
   user            User?
+  attendanceCorrections AttendanceCorrection[]
 }
 
 model Department {
@@ -88,9 +89,11 @@ model Attendance {
   clockOutLat      Float?
   clockOutLng      Float?
   deviceInfo       String?
+  isCorrected      Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   employee         Employee  @relation(fields: [employeeId], references: [id])
+  corrections      AttendanceCorrection[]
 
   @@unique([employeeId, date])
 }
@@ -164,4 +167,23 @@ model FaceMetadata {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   employee     Employee @relation(fields: [employeeId], references: [id])
+}
+
+model AttendanceCorrection {
+  id              String   @id @default(uuid())
+  employeeId      String
+  attendanceId    String?
+  oldClockIn      DateTime?
+  oldClockOut     DateTime?
+  requestedDate   DateTime
+  requestedClockIn DateTime?
+  requestedClockOut DateTime?
+  reason          String
+  status          String   @default("PENDING")
+  adminNote       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+  attendance Attendance? @relation(fields: [attendanceId], references: [id])
 }

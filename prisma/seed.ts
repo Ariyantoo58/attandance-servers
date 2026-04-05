@@ -140,23 +140,62 @@ async function main() {
     ],
   });
 
-  // 6. Attendance for Vishal (Yesterday)
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0,0,0,0);
+  // 6. Bulk Attendance for last 2 months (60 days)
+  console.log('Generating bulk attendance data...');
+  const employees = await prisma.employee.findMany();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 60);
 
-  await prisma.attendance.create({
-    data: {
-      employeeId: vishal.id,
-      date: yesterday,
-      clockIn: new Date(yesterday.getTime() + 8 * 60 * 60 * 1000), // 08:00 AM
-      clockOut: new Date(yesterday.getTime() + 17 * 60 * 60 * 1000), // 17:00 PM
-      status: 'PRESENT',
-      clockInLocation: 'Office - 1st Floor',
-      clockInLat: -6.200000,
-      clockInLng: 106.816666,
+  for (let i = 0; i < 60; i++) {
+    const currentDay = new Date(startDate);
+    currentDay.setDate(startDate.getDate() + i);
+    currentDay.setHours(0, 0, 0, 0);
+
+    // Skip weekends
+    const dayOfWeek = currentDay.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+    for (const emp of employees) {
+      // Randomize times
+      const inHour = 7 + Math.floor(Math.random() * 2); // 7 or 8 AM
+      const inMin = Math.floor(Math.random() * 60);
+      const outHour = 17 + Math.floor(Math.random() * 3); // 17, 18, or 19 PM
+      const outMin = Math.floor(Math.random() * 60);
+
+      const clockIn = new Date(currentDay);
+      clockIn.setHours(inHour, inMin, 0);
+      
+      const clockOut = new Date(currentDay);
+      clockOut.setHours(outHour, outMin, 0);
+
+      // Random coordinates around Jakarta (-6.2088, 106.8456)
+      const lat = -6.2088 + (Math.random() - 0.5) * 0.02;
+      const lng = 106.8456 + (Math.random() - 0.5) * 0.02;
+
+      await prisma.attendance.upsert({
+        where: {
+          employeeId_date: {
+            employeeId: emp.id,
+            date: currentDay,
+          },
+        },
+        update: {},
+        create: {
+          employeeId: emp.id,
+          date: currentDay,
+          clockIn,
+          clockOut,
+          status: 'PRESENT',
+          clockInLocation: 'Jakarta Headquarters',
+          clockInLat: lat,
+          clockInLng: lng,
+          clockOutLocation: 'Jakarta Headquarters',
+          clockOutLat: lat + (Math.random() - 0.5) * 0.001,
+          clockOutLng: lng + (Math.random() - 0.5) * 0.001,
+        },
+      });
     }
-  });
+  }
 
   console.log('Seeding finished.');
 }

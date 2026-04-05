@@ -15,14 +15,16 @@ export class HrDashboardService {
       todayAttendance,
       activeTasks,
       teamCount,
-      pendingPayroll
+      pendingPayroll,
+      pendingCorrections
     ] = await Promise.all([
       this.prisma.employee.count(),
       this.prisma.timeOff.count({ where: { status: 'SUBMITTED' } }),
       this.prisma.attendance.count({ where: { date: today } }),
       this.prisma.task.count({ where: { status: { in: ['PENDING', 'IN_PROGRESS'] } } }),
       this.prisma.department.count(),
-      this.prisma.payroll.count({ where: { status: 'PENDING' } })
+      this.prisma.payroll.count({ where: { status: 'PENDING' } }),
+      this.prisma.attendanceCorrection.count({ where: { status: 'PENDING' } })
     ]);
 
     return {
@@ -31,7 +33,8 @@ export class HrDashboardService {
       todayAttendance,
       activeTasks,
       teamCount,
-      pendingPayroll
+      pendingPayroll,
+      pendingCorrections
     };
   }
 

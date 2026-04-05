@@ -12,6 +12,8 @@ import { PayrollModule } from './payroll/payroll.module';
 import { NotificationModule } from './notifications/notifications.module';
 import { HrDashboardModule } from './hr-dashboard/hr-dashboard.module';
 
+import { AttendanceCorrectionModule } from './attendance-correction/attendance-correction.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -24,6 +26,7 @@ import { HrDashboardModule } from './hr-dashboard/hr-dashboard.module';
     PayrollModule,
     NotificationModule,
     HrDashboardModule,
+    AttendanceCorrectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
