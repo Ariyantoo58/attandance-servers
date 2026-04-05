@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AttendanceCorrectionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async requestCorrection(employeeId: string, data: {
     requestedDate: string;
@@ -24,7 +28,7 @@ export class AttendanceCorrectionService {
       },
     });
 
-    return this.prisma.attendanceCorrection.create({
+    const correction = await this.prisma.attendanceCorrection.create({
       data: {
         employeeId,
         attendanceId: existingAttendance?.id || null,
@@ -36,7 +40,19 @@ export class AttendanceCorrectionService {
         reason: data.reason,
         status: 'PENDING',
       },
+      include: { employee: true },
     });
+
+    // Notify HR via notification
+    this.notificationService.notifyHR(
+      'Attendance Correction Requested',
+      `${correction.employee.name} requested a correction for ${date.toDateString()}.`,
+    );
+
+    // Broadcast for HR live list update
+    this.notificationService.broadcast('correction:requested', correction);
+
+    return correction;
   }
 
   async getMyCorrections(employeeId: string) {
@@ -101,12 +117,28 @@ export class AttendanceCorrectionService {
       }
     }
 
-    return this.prisma.attendanceCorrection.update({
+    const updated = await this.prisma.attendanceCorrection.update({
       where: { id },
       data: {
         status,
         adminNote,
       },
+      include: { employee: { include: { user: true } } },
     });
+
+    // Notify Employee via notification
+    if (updated.employee.user) {
+      this.notificationService.notifyUser(
+        updated.employee.user.id,
+        `Correction Request ${status}`,
+        `Your correction request for ${updated.requestedDate.toDateString()} has been ${status.toLowerCase()}.`,
+        { status },
+      );
+    }
+
+    // Broadcast for live list update (Employee side refresh)
+    this.notificationService.broadcast('correction:changed', updated);
+
+    return updated;
   }
 }

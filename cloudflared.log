@@ -1,0 +1,27 @@
+2026-04-05T07:41:07Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-04-05T07:41:07Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-04-05T07:41:14Z INF +--------------------------------------------------------------------------------------------+
+2026-04-05T07:41:14Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-04-05T07:41:14Z INF |  https://cio-commitment-predicted-libraries.trycloudflare.com                              |
+2026-04-05T07:41:14Z INF +--------------------------------------------------------------------------------------------+
+2026-04-05T07:41:14Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-04-05T07:41:14Z INF Version 2025.7.0 (Checksum a6296f41b92a4c06bf37d99f02d193c752f4205ed843ba259702cdce36aba927)
+2026-04-05T07:41:14Z INF GOOS: darwin, GOVersion: go1.24.4, GoArch: amd64
+2026-04-05T07:41:14Z INF Settings: map[ha-connections:1 protocol:quic url:http://localhost:3000]
+2026-04-05T07:41:14Z INF cloudflared will not automatically update if installed by a package manager.
+2026-04-05T07:41:14Z INF Generated Connector ID: d7798075-a06d-4c70-9700-b5dbd53de4b1
+2026-04-05T07:41:14Z INF Initial protocol quic
+2026-04-05T07:41:14Z INF ICMP proxy will use 10.13.212.240 as source for IPv4
+2026-04-05T07:41:14Z INF ICMP proxy will use fe80::1c99:ad4c:5ad1:1238 in zone en0 as source for IPv6
+2026-04-05T07:41:14Z INF Created ICMP proxy listening on 10.13.212.240:0
+2026-04-05T07:41:14Z INF ICMP proxy will use 10.13.212.240 as source for IPv4
+2026-04-05T07:41:14Z INF ICMP proxy will use fe80::1c99:ad4c:5ad1:1238 in zone en0 as source for IPv6
+2026-04-05T07:41:14Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2026-04-05T07:41:14Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveP256] connIndex=0 event=0 ip=198.41.192.47
+2026-04-05T07:41:15Z INF Registered tunnel connection connIndex=0 connection=1b9ee80b-1935-4519-820f-8d4cc14b7eaf event=0 ip=198.41.192.47 location=sin16 protocol=quic
+2026-04-05T08:15:56Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://localhost:3000
+2026-04-05T08:15:56Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://localhost:3000
+2026-04-05T08:15:56Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 dest=https://cio-commitment-predicted-libraries.trycloudflare.com/socket.io/?EIO=4&transport=websocket event=0 ip=198.41.192.47 type=ws
+2026-04-05T08:15:56Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 dest=https://cio-commitment-predicted-libraries.trycloudflare.com/socket.io/?EIO=4&transport=websocket event=0 ip=198.41.192.47 type=ws
+2026-04-05T08:16:07Z ERR  error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 event=1 ingressRule=0 originService=http://localhost:3000
+2026-04-05T08:16:07Z ERR Request failed error="Unable to reach the origin service. The service may be down or it may not be responding to traffic from cloudflared: dial tcp [::1]:3000: connect: connection refused" connIndex=0 dest=https://cio-commitment-predicted-libraries.trycloudflare.com/socket.io/?EIO=4&transport=websocket event=0 ip=198.41.192.47 type=ws

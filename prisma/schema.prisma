@@ -18,6 +18,7 @@ model User {
   employeeId      String?   @unique
   refreshToken    String?
   refreshTokenExp DateTime?
+  pushToken       String?
   employee        Employee? @relation(fields: [employeeId], references: [id])
 }
 

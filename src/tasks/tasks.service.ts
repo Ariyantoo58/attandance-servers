@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TaskService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async createTask(data: {
     employeeIds: string[];
@@ -26,9 +30,15 @@ export class TaskService {
       category: data.category || 'GENERAL',
     }));
 
-    return this.prisma.task.createMany({
+    const result = await this.prisma.task.createMany({
       data: tasks,
     });
+
+    // Broadcast the new tasks. Since createMany doesn't return the objects, 
+    // we notify that tasks were created for specific employees.
+    this.notificationService.broadcast('task:created', { employeeIds: data.employeeIds, title: data.title });
+
+    return result;
   }
 
   async getTasksByEmployee(employeeId: string) {
@@ -63,10 +73,12 @@ export class TaskService {
     if (status === 'COMPLETE') {
       data.progress = 100;
     }
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data,
     });
+    this.notificationService.broadcast('task:updated', updated);
+    return updated;
   }
 
   async updateTaskProgress(id: string, progress: number) {
@@ -76,19 +88,23 @@ export class TaskService {
     } else if (progress > 0) {
       data.status = 'IN_PROGRESS';
     }
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data,
     });
+    this.notificationService.broadcast('task:updated', updated);
+    return updated;
   }
 
   async updateTask(id: string, data: any) {
     if (data.date) data.date = new Date(data.date);
     if (data.dueDate) data.dueDate = new Date(data.dueDate);
     
-    return this.prisma.task.update({
+    const updated = await this.prisma.task.update({
       where: { id },
       data,
     });
+    this.notificationService.broadcast('task:updated', updated);
+    return updated;
   }
 }

@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notifications/notifications.service';
 
 @Injectable()
 export class EmployeesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async findAll() {
     return this.prisma.employee.findMany({
@@ -45,9 +49,12 @@ export class EmployeesService {
         };
       }
 
-      return await this.prisma.employee.create({
+      const employee = await this.prisma.employee.create({
         data: createPayload,
       });
+
+      this.notificationService.broadcast('employee_changed', { action: 'CREATED', employee });
+      return employee;
     } catch (error) {
       console.error('Prisma Employee Create Error:', error);
       throw error;
@@ -55,15 +62,19 @@ export class EmployeesService {
   }
 
   async update(id: string, data: any) {
-    return this.prisma.employee.update({
+    const employee = await this.prisma.employee.update({
       where: { id },
       data,
     });
+    this.notificationService.broadcast('employee_changed', { action: 'UPDATED', employee });
+    return employee;
   }
 
   async remove(id: string) {
-    return this.prisma.employee.delete({
+    const employee = await this.prisma.employee.delete({
       where: { id },
     });
+    this.notificationService.broadcast('employee_changed', { action: 'DELETED', employeeId: id });
+    return employee;
   }
 }

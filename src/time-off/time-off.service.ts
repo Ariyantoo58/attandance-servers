@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TimeOffService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
   async createRequest(data: {
     employeeId: string;
@@ -13,7 +17,7 @@ export class TimeOffService {
     todate: string;
     type?: string;
   }) {
-    return this.prisma.timeOff.create({
+    const request = await this.prisma.timeOff.create({
       data: {
         employeeId: data.employeeId,
         title: data.title,
@@ -23,7 +27,20 @@ export class TimeOffService {
         type: data.type || 'ANNUAL',
         status: 'SUBMITTED',
       },
+      include: { employee: true },
     });
+
+    // Notify HR via notification
+    this.notificationService.notifyHR(
+      'New Time Off Request',
+      `${request.employee.name} has submitted a new request: ${request.title}`,
+      { requestId: request.id },
+    );
+
+    // Broadcast for live list update
+    this.notificationService.broadcast('time_off:requested', request);
+
+    return request;
   }
 
   async getRequestsByEmployee(employeeId: string) {
@@ -41,9 +58,26 @@ export class TimeOffService {
   }
 
   async updateStatus(id: string, status: string, approvedBy?: string) {
-    return this.prisma.timeOff.update({
+    const updated = await this.prisma.timeOff.update({
       where: { id },
       data: { status, approvedBy },
+      include: { employee: true },
     });
+
+    // Notify Employee
+    const user = await this.prisma.user.findUnique({ where: { employeeId: updated.employeeId } });
+    if (user) {
+      this.notificationService.notifyUser(
+        user.id,
+        `Time Off ${status}`,
+        `Your request "${updated.title}" has been ${status.toLowerCase()}.`,
+        { requestId: updated.id, status },
+      );
+    }
+
+    // Broadcast change for all relevant views
+    this.notificationService.broadcast('time_off:changed', updated);
+
+    return updated;
   }
 }
