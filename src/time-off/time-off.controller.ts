@@ -1,6 +1,9 @@
-import { Controller, Post, Get, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Patch, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { TimeOffService } from './time-off.service';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('time-off')
 @Controller('time-off')
 export class TimeOffController {
   constructor(private readonly timeOffService: TimeOffService) {}
@@ -27,8 +30,14 @@ export class TimeOffController {
     return this.timeOffService.getAllRequests();
   }
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
   @Patch('update-status/:id')
-  async updateStatus(@Param('id') id: string, @Body() body: { status: string; approvedBy?: string }) {
-    return this.timeOffService.updateStatus(id, body.status, body.approvedBy);
+  async updateStatus(
+    @Param('id') id: string, 
+    @Body() body: { status: string },
+    @Request() req: any
+  ) {
+    return this.timeOffService.updateStatus(id, body.status, req.user.employeeId, req.user.role);
   }
 }

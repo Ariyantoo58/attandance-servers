@@ -13,6 +13,7 @@ import { NotificationModule } from './notifications/notifications.module';
 import { HrDashboardModule } from './hr-dashboard/hr-dashboard.module';
 
 import { AttendanceCorrectionModule } from './attendance-correction/attendance-correction.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AttendanceCorrectionModule } from './attendance-correction/attendance-c
     NotificationModule,
     HrDashboardModule,
     AttendanceCorrectionModule,
+    TeamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

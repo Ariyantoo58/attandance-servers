@@ -57,6 +57,8 @@ model Employee {
   timeOffs        TimeOff[]
   user            User?
   attendanceCorrections AttendanceCorrection[]
+  ledTeams        Team[]         @relation("TeamLeader")
+  teams           TeamMember[]
 }
 
 model Department {
@@ -193,4 +195,24 @@ model AttendanceCorrection {
 
   employee   Employee    @relation(fields: [employeeId], references: [id])
   attendance Attendance? @relation(fields: [attendanceId], references: [id])
+}
+
+model Team {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  leaderId    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  leader      Employee     @relation("TeamLeader", fields: [leaderId], references: [id])
+  members     TeamMember[]
+}
+
+model TeamMember {
+  teamId     String
+  employeeId String
+  team       Team     @relation(fields: [teamId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@id([teamId, employeeId])
 }

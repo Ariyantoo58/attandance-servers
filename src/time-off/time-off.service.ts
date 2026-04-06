@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notifications/notifications.service';
 
@@ -57,10 +57,39 @@ export class TimeOffService {
     });
   }
 
-  async updateStatus(id: string, status: string, approvedBy?: string) {
+  async updateStatus(id: string, status: string, approvedByEmployeeId: string, role: string) {
+    const request = await this.prisma.timeOff.findUnique({
+      where: { id },
+      include: { employee: true },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Time off request not found');
+    }
+
+    const isHR = ['HR', 'ADMIN', 'MANAGER'].includes(role);
+
+    if (!isHR) {
+      // Check if the approver is a leader of a team containing the requester
+      const teamLeadCheck = await this.prisma.team.findFirst({
+        where: {
+          leaderId: approvedByEmployeeId,
+          members: {
+            some: {
+              employeeId: request.employeeId
+            }
+          }
+        }
+      });
+
+      if (!teamLeadCheck) {
+        throw new ForbiddenException('You do not have permission to process this request');
+      }
+    }
+
     const updated = await this.prisma.timeOff.update({
       where: { id },
-      data: { status, approvedBy },
+      data: { status, approvedBy: approvedByEmployeeId },
       include: { employee: true },
     });
 
