@@ -7,7 +7,8 @@ export class TaskController {
 
   @Post()
   async create(@Body() body: {
-    employeeIds: string[];
+    employeeIds?: string[];
+    teamId?: string;
     title: string;
     description?: string;
     date?: string;

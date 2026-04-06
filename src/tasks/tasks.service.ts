@@ -10,7 +10,8 @@ export class TaskService {
   ) {}
 
   async createTask(data: {
-    employeeIds: string[];
+    employeeIds?: string[];
+    teamId?: string;
     title: string;
     description?: string;
     date?: string;
@@ -18,7 +19,39 @@ export class TaskService {
     priority?: string;
     category?: string;
   }) {
-    const tasks = data.employeeIds.map((id) => ({
+    if (data.teamId) {
+      // Create a single task for the team
+      const task = await this.prisma.task.create({
+        data: {
+          teamId: data.teamId,
+          title: data.title,
+          description: data.description,
+          date: data.date ? new Date(data.date) : new Date(),
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          status: 'PENDING',
+          priority: data.priority || 'MEDIUM',
+          progress: 0,
+          category: data.category || 'GENERAL',
+        },
+      });
+
+      // Broadcast and notify team members
+      const teamMembers = await this.prisma.teamMember.findMany({
+        where: { teamId: data.teamId },
+        select: { employeeId: true },
+      });
+      const employeeIds = teamMembers.map((m) => m.employeeId);
+      
+      this.notificationService.broadcast('task:created', { 
+        teamId: data.teamId, 
+        employeeIds, 
+        title: data.title 
+      });
+
+      return task;
+    }
+
+    const tasks = (data.employeeIds || []).map((id) => ({
       employeeId: id,
       title: data.title,
       description: data.description,
@@ -34,16 +67,33 @@ export class TaskService {
       data: tasks,
     });
 
-    // Broadcast the new tasks. Since createMany doesn't return the objects, 
-    // we notify that tasks were created for specific employees.
-    this.notificationService.broadcast('task:created', { employeeIds: data.employeeIds, title: data.title });
+    this.notificationService.broadcast('task:created', { 
+      employeeIds: data.employeeIds, 
+      title: data.title 
+    });
 
     return result;
   }
 
   async getTasksByEmployee(employeeId: string) {
-    return this.prisma.task.findMany({
+    // Find teams the employee belongs to
+    const teams = await this.prisma.teamMember.findMany({
       where: { employeeId },
+      select: { teamId: true },
+    });
+    const teamIds = teams.map((t) => t.teamId);
+
+    return this.prisma.task.findMany({
+      where: {
+        OR: [
+          { employeeId },
+          { teamId: { in: teamIds } },
+        ],
+      },
+      include: {
+        team: true,
+        employee: true,
+      },
       orderBy: { date: 'desc' },
     });
   }
@@ -63,7 +113,10 @@ export class TaskService {
 
     return this.prisma.task.findMany({
       where,
-      include: { employee: true },
+      include: { 
+        employee: true,
+        team: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -100,9 +153,22 @@ export class TaskService {
     if (data.date) data.date = new Date(data.date);
     if (data.dueDate) data.dueDate = new Date(data.dueDate);
     
+    // If switching to team, clear employeeId
+    if (data.teamId) {
+      data.employeeId = null;
+    } 
+    // If switching to individual, clear teamId
+    else if (data.employeeId) {
+      data.teamId = null;
+    }
+    
     const updated = await this.prisma.task.update({
       where: { id },
       data,
+      include: {
+        employee: true,
+        team: true,
+      }
     });
     this.notificationService.broadcast('task:updated', updated);
     return updated;
