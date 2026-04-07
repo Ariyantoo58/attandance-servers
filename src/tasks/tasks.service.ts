@@ -18,6 +18,8 @@ export class TaskService {
     dueDate?: string;
     priority?: string;
     category?: string;
+    weight?: number;
+    difficulty?: string;
   }) {
     if (data.teamId) {
       // Create a single task for the team
@@ -32,6 +34,8 @@ export class TaskService {
           priority: data.priority || 'MEDIUM',
           progress: 0,
           category: data.category || 'GENERAL',
+          weight: data.weight || 1,
+          difficulty: data.difficulty || 'EASY',
         },
       });
 
@@ -61,6 +65,8 @@ export class TaskService {
       priority: data.priority || 'MEDIUM',
       progress: 0,
       category: data.category || 'GENERAL',
+      weight: data.weight || 1,
+      difficulty: data.difficulty || 'EASY',
     }));
 
     const result = await this.prisma.task.createMany({
@@ -125,6 +131,9 @@ export class TaskService {
     const data: any = { status };
     if (status === 'COMPLETE') {
       data.progress = 100;
+      data.completedAt = new Date();
+    } else {
+      data.completedAt = null;
     }
     const updated = await this.prisma.task.update({
       where: { id },
@@ -138,8 +147,12 @@ export class TaskService {
     const data: any = { progress };
     if (progress === 100) {
       data.status = 'COMPLETE';
+      data.completedAt = new Date();
     } else if (progress > 0) {
       data.status = 'IN_PROGRESS';
+      data.completedAt = null;
+    } else {
+      data.completedAt = null;
     }
     const updated = await this.prisma.task.update({
       where: { id },

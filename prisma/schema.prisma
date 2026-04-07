@@ -60,6 +60,7 @@ model Employee {
   ledTeams        Team[]         @relation("TeamLeader")
   teams           TeamMember[]
   overtimes       Overtime[]
+  kpiReviews      KpiReview[]
 }
 
 model Department {
@@ -126,10 +127,15 @@ model Task {
   description String?
   date        DateTime @default(now())
   dueDate     DateTime?
+  completedAt DateTime?
   status      String   @default("PENDING")
   priority    String   @default("MEDIUM")
   progress    Int      @default(0)
   category    String?  @default("GENERAL")
+  weight      Int      @default(1)
+  difficulty  String   @default("EASY")
+  qualityRating Int?
+  actualHours Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   employee    Employee? @relation(fields: [employeeId], references: [id])
@@ -238,4 +244,41 @@ model Overtime {
   updatedAt        DateTime  @updatedAt
 
   employee         Employee  @relation(fields: [employeeId], references: [id])
+}
+
+model KpiReview {
+  id              String   @id @default(uuid())
+  employeeId      String
+  reviewerId      String
+  month           Int
+  year            Int
+  taskScore       Float    @default(0)
+  attendanceScore Float    @default(0)
+  behavioralScore Float    @default(0)
+  overallScore    Float    @default(0)
+  comment         String?
+  status          String   @default("DRAFT") // DRAFT, FINAL
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  employee        Employee    @relation(fields: [employeeId], references: [id])
+  metrics         KpiMetric[]
+
+  @@unique([employeeId, month, year])
+}
+
+model KpiMetric {
+  id          String    @id @default(uuid())
+  kpiReviewId String
+  name        String    // e.g., "Discipline", "Teamwork", "Communication"
+  score       Float     @default(0)
+  kpiReview   KpiReview @relation(fields: [kpiReviewId], references: [id], onDelete: Cascade)
+}
+
+model KpiCriteria {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
