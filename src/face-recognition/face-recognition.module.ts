@@ -3,9 +3,10 @@ import { FaceRecognitionService } from './face-recognition.service';
 import { FaceRecognitionController } from './face-recognition.controller';
 import { PrismaService } from '../prisma/prisma.service';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { OvertimeModule } from '../overtime/overtime.module';
 
 @Module({
-  imports: [AttendanceModule],
+  imports: [AttendanceModule, OvertimeModule],
   controllers: [FaceRecognitionController],
   providers: [FaceRecognitionService, PrismaService],
 })

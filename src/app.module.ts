@@ -14,6 +14,7 @@ import { HrDashboardModule } from './hr-dashboard/hr-dashboard.module';
 
 import { AttendanceCorrectionModule } from './attendance-correction/attendance-correction.module';
 import { TeamsModule } from './teams/teams.module';
+import { OvertimeModule } from './overtime/overtime.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { TeamsModule } from './teams/teams.module';
     HrDashboardModule,
     AttendanceCorrectionModule,
     TeamsModule,
+    OvertimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

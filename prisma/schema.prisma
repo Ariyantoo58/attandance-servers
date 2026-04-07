@@ -59,6 +59,7 @@ model Employee {
   attendanceCorrections AttendanceCorrection[]
   ledTeams        Team[]         @relation("TeamLeader")
   teams           TeamMember[]
+  overtimes       Overtime[]
 }
 
 model Department {
@@ -218,4 +219,23 @@ model TeamMember {
   employee   Employee @relation(fields: [employeeId], references: [id])
 
   @@id([teamId, employeeId])
+}
+
+model Overtime {
+  id               String    @id @default(uuid())
+  employeeId       String
+  date             DateTime
+  startTime        DateTime  // Jam mulai rencana
+  endTime          DateTime  // Jam selesai rencana
+  actualStart      DateTime? // Jam clock-in wajah sesungguhnya
+  actualEnd        DateTime? // Jam clock-out wajah sesungguhnya
+  reason           String
+  status           String    @default("PENDING") // PENDING, APPROVED, REJECTED, COMPLETED
+  adminNote        String?
+  compensation     Float     @default(0)
+  duration         Float     @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  employee         Employee  @relation(fields: [employeeId], references: [id])
 }

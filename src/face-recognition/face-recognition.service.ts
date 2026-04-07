@@ -4,6 +4,7 @@ import { join } from 'path';
 import { Observable, lastValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AttendanceService } from '../attendance/attendance.service';
+import { OvertimeService } from '../overtime/overtime.service';
 
 export interface RegisterRequest {
   id: string;
@@ -50,6 +51,7 @@ export class FaceRecognitionService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private attendanceService: AttendanceService,
+    private overtimeService: OvertimeService,
   ) {}
 
   onModuleInit() {
@@ -176,6 +178,29 @@ export class FaceRecognitionService implements OnModuleInit {
             message: 'Clock Out Berhasil',
           };
         } else {
+          // Check for approved overtime if regular clock-out is done
+          const approvedOvertime = await this.overtimeService.getOvertimeByDateAndEmployee(employee.id, today);
+          
+          if (approvedOvertime) {
+            if (!approvedOvertime.actualStart) {
+              await this.overtimeService.recordClockIn(approvedOvertime.id);
+              return {
+                ...response,
+                name: employee.name,
+                message: 'Clock In Lembur Berhasil',
+              };
+            } else if (!approvedOvertime.actualEnd) {
+              const updatedOvertime = await this.overtimeService.recordClockOut(approvedOvertime.id);
+              return {
+                ...response,
+                name: employee.name,
+                message: 'Clock Out Lembur Berhasil',
+                overtime_duration: updatedOvertime?.duration,
+                overtime_pay: updatedOvertime?.compensation
+              };
+            }
+          }
+
           return {
             recognized: false,
             id: employee.id,

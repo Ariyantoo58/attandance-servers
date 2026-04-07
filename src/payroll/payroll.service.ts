@@ -38,7 +38,25 @@ export class PayrollService {
     lateDeduction?: number;
     otherDeductions?: number;
   }) {
-    const earnings = (data.basicSalary || 0) + (data.overtime || 0) + (data.bonuses || 0);
+    // 1. Fetch all COMPLETED overtimes for this employee in this month/year
+    const startDate = new Date(data.year, data.month - 1, 1);
+    const endDate = new Date(data.year, data.month, 0, 23, 59, 59);
+
+    const overtimes = await this.prisma.overtime.findMany({
+      where: {
+        employeeId: data.employeeId,
+        status: 'COMPLETED',
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    const calculatedOvertime = overtimes.reduce((sum, ot) => sum + ot.compensation, 0);
+    const finalOvertime = data.overtime !== undefined ? data.overtime : calculatedOvertime;
+
+    const earnings = (data.basicSalary || 0) + (finalOvertime || 0) + (data.bonuses || 0);
     const deductions = (data.pph21 || 0) + (data.bpjsKetenagakerjaan || 0) + (data.bpjsKesehatan || 0) + (data.lateDeduction || 0) + (data.otherDeductions || 0);
     const netSalary = earnings - deductions;
 
@@ -52,12 +70,14 @@ export class PayrollService {
       },
       update: {
         ...data,
+        overtime: finalOvertime,
         netSalary,
         status: 'PAID',
         paymentDate: new Date(),
       },
       create: {
         ...data,
+        overtime: finalOvertime,
         netSalary,
         status: 'PAID',
         paymentDate: new Date(),
