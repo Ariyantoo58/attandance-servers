@@ -20,5 +20,12 @@ export class HrDashboardController {
   async getRecentLeaves() {
     return this.service.getRecentLeaveRequests();
   }
+
+  @Get('analytics')
+  @ApiOperation({ summary: 'Get company-wide analytics' })
+  @ApiResponse({ status: 200, description: 'Return performance and attendance trends.' })
+  async getAnalytics() {
+    return this.service.getAnalyticsData();
+  }
 }
 

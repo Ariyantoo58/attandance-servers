@@ -53,18 +53,26 @@ export class KpiService {
       include: { metrics: true },
     });
 
+    const globalCriteria = await this.prisma.kpiCriteria.findMany({
+      where: { isActive: true },
+    });
+
     let metrics = [];
-    if (existingReview && existingReview.metrics.length > 0) {
-      metrics = existingReview.metrics;
-    } else {
-      // Fetch Global Criteria if no review exists or no metrics saved
-      const globalCriteria = await this.prisma.kpiCriteria.findMany({
-        where: { isActive: true },
-      });
+    if (globalCriteria.length > 0) {
+      // Create a map of existing scores
+      const existingScores = new Map();
+      if (existingReview && existingReview.metrics.length > 0) {
+        existingReview.metrics.forEach((m) => existingScores.set(m.name, m.score));
+      }
+
+      // Map global criteria to metrics, pulling existing scores if available
       metrics = globalCriteria.map((c) => ({
         name: c.name,
-        score: 0,
+        score: existingScores.has(c.name) ? existingScores.get(c.name) : 0,
       }));
+    } else if (existingReview && existingReview.metrics.length > 0) {
+      // Fallback if no global criteria defined, use existing ones
+      metrics = existingReview.metrics;
     }
 
     let behavioralScore = 0;
