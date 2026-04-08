@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FaceRecognitionModule } from './face-recognition/face-recognition.module';
@@ -16,10 +19,17 @@ import { AttendanceCorrectionModule } from './attendance-correction/attendance-c
 import { TeamsModule } from './teams/teams.module';
 import { OvertimeModule } from './overtime/overtime.module';
 import { KpiModule } from './kpi/kpi.module';
+import { ReimbursementModule } from './reimbursement/reimbursement.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
+
     PrismaModule,
+
     FaceRecognitionModule,
     AuthModule,
     EmployeesModule,
@@ -33,6 +43,7 @@ import { KpiModule } from './kpi/kpi.module';
     TeamsModule,
     OvertimeModule,
     KpiModule,
+    ReimbursementModule,
   ],
   controllers: [AppController],
   providers: [AppService],

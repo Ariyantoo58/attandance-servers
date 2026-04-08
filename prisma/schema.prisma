@@ -61,6 +61,7 @@ model Employee {
   teams           TeamMember[]
   overtimes       Overtime[]
   kpiReviews      KpiReview[]
+  reimbursements  Reimbursement[]
 }
 
 model Department {
@@ -282,3 +283,21 @@ model KpiCriteria {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Reimbursement {
+  id          String   @id @default(uuid())
+  employeeId  String
+  title       String
+  description String?
+  category    String   // e.g., Transport, Food, Medical, Office
+  amount      Float
+  date        DateTime
+  receiptUrl  String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employee    Employee @relation(fields: [employeeId], references: [id])
+}
+
