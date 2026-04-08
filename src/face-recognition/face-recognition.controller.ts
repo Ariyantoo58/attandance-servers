@@ -54,9 +54,18 @@ export class FaceRecognitionController {
         similarity: `${result.confidence}%`,
         message: result.message,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[FaceRecognitionController] Error during recognize:', error);
-      return { recognized: false, message: 'Gagal memproses data wajah (Server Error).' };
+      
+      // Extract the most descriptive error message
+      let message = 'Gagal memproses data wajah (Server Error).';
+      if (error.response?.message) {
+        message = Array.isArray(error.response.message) ? error.response.message[0] : error.response.message;
+      } else if (error.message) {
+        message = error.message;
+      }
+      
+      return { recognized: false, message };
     }
   }
 

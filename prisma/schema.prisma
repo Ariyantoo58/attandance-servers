@@ -45,11 +45,13 @@ model Employee {
   ptkpStatus      String?        @default("TK0")
   departmentId    String?
   positionId      String?
+  branchId        String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   attendance      Attendance[]
   position        Position?      @relation(fields: [positionId], references: [id])
   department      Department?    @relation(fields: [departmentId], references: [id])
+  branch          Branch?        @relation(fields: [branchId], references: [id])
   faceMetadata    FaceMetadata?
   notifications   Notification[]
   payrolls        Payroll[]
@@ -299,5 +301,17 @@ model Reimbursement {
   updatedAt   DateTime @updatedAt
 
   employee    Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Branch {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  address     String?
+  latitude    Float
+  longitude   Float
+  radius      Int        @default(50)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  employees   Employee[]
 }
 

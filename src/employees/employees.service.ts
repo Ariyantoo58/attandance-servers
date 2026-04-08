@@ -11,7 +11,7 @@ export class EmployeesService {
 
   async findAll() {
     return this.prisma.employee.findMany({
-        include: { department: true, position: true, user: { select: { role: true } } }
+        include: { department: true, position: true, branch: true, user: { select: { role: true } } }
     });
   }
 
@@ -26,7 +26,7 @@ export class EmployeesService {
   async findOne(id: string) {
     return this.prisma.employee.findUnique({
       where: { id },
-      include: { department: true, position: true, user: { select: { role: true } } }
+      include: { department: true, position: true, branch: true, user: { select: { role: true } } }
     });
   }
 

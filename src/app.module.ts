@@ -20,6 +20,7 @@ import { TeamsModule } from './teams/teams.module';
 import { OvertimeModule } from './overtime/overtime.module';
 import { KpiModule } from './kpi/kpi.module';
 import { ReimbursementModule } from './reimbursement/reimbursement.module';
+import { BranchModule } from './branches/branch.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ReimbursementModule } from './reimbursement/reimbursement.module';
     OvertimeModule,
     KpiModule,
     ReimbursementModule,
+    BranchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

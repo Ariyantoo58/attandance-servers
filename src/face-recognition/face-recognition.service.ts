@@ -137,7 +137,7 @@ export class FaceRecognitionService implements OnModuleInit {
       if (expectedEmployeeId && recognizedId !== expectedEmployeeId) {
         return {
           recognized: false,
-          message: 'Face does not match the logged-in user',
+          message: 'Gagal: Wajah yang terdeteksi tidak sesuai dengan akun yang login.',
           name: 'Unknown',
           confidence: response.confidence
         };
@@ -161,53 +161,72 @@ export class FaceRecognitionService implements OnModuleInit {
           },
         });
 
-        if (!existingAttendance) {
-          const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
-          await this.attendanceService.clockIn(employee.id, locName, 'Mobile Device', latitude, longitude);
-          return {
-            ...response,
-            name: employee.name,
-            message: 'Clock In Berhasil',
-          };
-        } else if (!existingAttendance.clockOut) {
-          const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
-          await this.attendanceService.clockOut(employee.id, latitude, longitude, locName);
-          return {
-            ...response,
-            name: employee.name,
-            message: 'Clock Out Berhasil',
-          };
-        } else {
-          // Check for approved overtime if regular clock-out is done
-          const approvedOvertime = await this.overtimeService.getOvertimeByDateAndEmployee(employee.id, today);
-          
-          if (approvedOvertime) {
-            if (!approvedOvertime.actualStart) {
-              await this.overtimeService.recordClockIn(approvedOvertime.id);
-              return {
-                ...response,
-                name: employee.name,
-                message: 'Clock In Lembur Berhasil',
-              };
-            } else if (!approvedOvertime.actualEnd) {
-              const updatedOvertime = await this.overtimeService.recordClockOut(approvedOvertime.id);
-              return {
-                ...response,
-                name: employee.name,
-                message: 'Clock Out Lembur Berhasil',
-                overtime_duration: updatedOvertime?.duration,
-                overtime_pay: updatedOvertime?.compensation
-              };
+        try {
+          if (!existingAttendance) {
+            const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
+            await this.attendanceService.clockIn(employee.id, locName, 'Mobile Device', latitude, longitude);
+            return {
+              recognized: true,
+              id: employee.id,
+              name: employee.name,
+              confidence: response.confidence,
+              message: 'Clock In Berhasil',
+            };
+          } else if (!existingAttendance.clockOut) {
+            const locName = latitude && longitude ? 'Mobile (Face Scan)' : 'Office (Face Scan)';
+            await this.attendanceService.clockOut(employee.id, latitude, longitude, locName);
+            return {
+              recognized: true,
+              id: employee.id,
+              name: employee.name,
+              confidence: response.confidence,
+              message: 'Clock Out Berhasil',
+            };
+          } else {
+            // Check for approved overtime if regular clock-out is done
+            const approvedOvertime = await this.overtimeService.getOvertimeByDateAndEmployee(employee.id, today);
+            
+            if (approvedOvertime) {
+              if (!approvedOvertime.actualStart) {
+                await this.overtimeService.recordClockIn(approvedOvertime.id);
+                return {
+                  recognized: true,
+                  id: employee.id,
+                  name: employee.name,
+                  confidence: response.confidence,
+                  message: 'Clock In Lembur Berhasil',
+                };
+              } else if (!approvedOvertime.actualEnd) {
+                const updatedOvertime = await this.overtimeService.recordClockOut(approvedOvertime.id);
+                return {
+                  recognized: true,
+                  id: employee.id,
+                  name: employee.name,
+                  confidence: response.confidence,
+                  message: 'Clock Out Lembur Berhasil',
+                  overtime_duration: updatedOvertime?.duration,
+                  overtime_pay: updatedOvertime?.compensation
+                };
+              }
             }
-          }
 
-          return {
-            recognized: false,
-            id: employee.id,
-            name: employee.name,
-            confidence: response.confidence,
-            message: 'Anda sudah melakukan Clock In & Clock Out hari ini.',
-          };
+            return {
+              recognized: false,
+              id: employee.id,
+              name: employee.name,
+              confidence: response.confidence,
+              message: 'Anda sudah melakukan Clock In & Clock Out hari ini.',
+            };
+          }
+        } catch (error) {
+           console.error('[FaceRecognitionService] Attendance recording failed:', error);
+           return {
+             recognized: false,
+             id: employee.id,
+             name: employee.name,
+             confidence: response.confidence,
+             message: error.response?.message || error.message || 'Gagal mencatat absensi.',
+           };
         }
       }
     }
@@ -217,6 +236,21 @@ export class FaceRecognitionService implements OnModuleInit {
       name: 'Unknown',
       message: response.recognized ? 'Recognized but employee not found in database' : response.message
     };
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3; // meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // in meters
   }
   
   async checkStatus(employeeId: string) {

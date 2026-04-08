@@ -16,7 +16,8 @@ export class AuthService {
         employee: {
           include: {
             department: true,
-            position: true
+            position: true,
+            branch: true
           }
         }
       },
@@ -51,7 +52,8 @@ export class AuthService {
         employee: {
           include: {
             department: true,
-            position: true
+            position: true,
+            branch: true
           }
         }
       },
